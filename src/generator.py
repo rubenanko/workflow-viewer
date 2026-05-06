@@ -27,7 +27,7 @@ class HTMLGenerator:
                 if job.get('uses'):
                     label += f"\nuses: {job['uses']}"
                 if job.get('if'):
-                    label += f"\nif: {job['if']}"
+                    label += f"\n[if: {job['if']}]"
                 
                 elements.append({
                     'data': {
@@ -39,13 +39,15 @@ class HTMLGenerator:
                     }
                 })
 
+                # Steps and chronological edges
+                prev_step_id = None
                 for s_idx, step in enumerate(job['steps']):
                     step_id = f"{job_node_id}_step_{s_idx}"
                     step_label = step['name']
                     if step.get('uses'):
                         step_label += f"\nuses: {step['uses']}"
                     if step.get('if'):
-                        step_label += f"\nif: {step['if']}"
+                        step_label += f"\n[if: {step['if']}]"
                     
                     elements.append({
                         'data': {
@@ -56,7 +58,20 @@ class HTMLGenerator:
                             'condition': step.get('if')
                         }
                     })
+                    
+                    # Chronological edge between steps
+                    if prev_step_id:
+                        elements.append({
+                            'data': {
+                                'id': f"edge_{prev_step_id}_{step_id}",
+                                'source': prev_step_id,
+                                'target': step_id,
+                                'type': 'chronology'
+                            }
+                        })
+                    prev_step_id = step_id
 
+                # Edges for 'needs'
                 for need in job['needs']:
                     target_job_id = f"{wf_id}_{need}"
                     elements.append({
@@ -72,6 +87,8 @@ class HTMLGenerator:
                 'id': wf_id,
                 'name': wf['name'],
                 'filename': wf['filename'],
+                'on': wf['on'],
+                'on_full': wf['on_full'],
                 'elements': elements,
                 'raw_content': wf['raw_content']
             })
@@ -217,6 +234,35 @@ class HTMLGenerator:
             color: #6a737d;
         }}
         
+        /* Metadata Panel */
+        #metadata-panel {{
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 240px;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            z-index: 100;
+            font-size: 0.85em;
+            display: none;
+        }}
+        #metadata-panel h4 {{ margin: 0 0 10px 0; font-size: 1em; border-bottom: 1px solid #eee; padding-bottom: 8px; }}
+        .meta-item {{ margin-bottom: 8px; }}
+        .meta-label {{ font-weight: 600; color: #6a737d; display: block; margin-bottom: 2px; }}
+        .meta-value {{ display: block; word-break: break-all; }}
+        .tag {{
+            display: inline-block;
+            background: #e1f5fe;
+            color: #01579b;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin: 2px;
+        }}
+
         .legend {{
             position: absolute;
             bottom: 20px;
@@ -248,12 +294,25 @@ class HTMLGenerator:
         </div>
         <div id="view-container">
             <div id="graph-view" class="view active">
+                <div id="metadata-panel">
+                    <h4>Workflow Metadata</h4>
+                    <div class="meta-item">
+                        <span class="meta-label">Triggers (on):</span>
+                        <div id="meta-triggers"></div>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">File:</span>
+                        <span id="meta-filename" class="meta-value"></span>
+                    </div>
+                </div>
                 <div id="cy"></div>
                 <div class="legend">
                     <div class="legend-item"><div class="legend-color" style="background: #e1f5fe; border: 1px solid #01579b;"></div> Workflow</div>
                     <div class="legend-item"><div class="legend-color" style="background: #e8f5e9; border: 1px solid #2e7d32;"></div> Job</div>
                     <div class="legend-item"><div class="legend-color" style="background: #f5f5f5; border: 1px solid #9e9e9e;"></div> Step</div>
-                    X ➔ Y : Y needs X</div>
+                    <div class="legend-item"><div style="width: 12px; height: 0; border-top: 2px solid #a1a8b0; margin-right: 8px;"></div> Dependency (needs)</div>
+                    <div class="legend-item"><div style="width: 12px; height: 0; border-top: 2px solid #ddd; margin-right: 8px;"></div> Chronology (steps)</div>
+                    <div class="legend-item"><div style="width: 12px; height: 0; border-top: 2px dashed #666; margin-right: 8px;"></div> Conditional (if)</div>
                 </div>
             </div>
             <div id="code-view" class="view">
@@ -302,6 +361,18 @@ class HTMLGenerator:
             document.getElementById('current-wf-title').innerText = wf.name;
             document.getElementById('yaml-content').textContent = wf.raw_content;
             hljs.highlightElement(document.getElementById('yaml-content'));
+
+            // Update Metadata
+            document.getElementById('metadata-panel').style.display = 'block';
+            document.getElementById('meta-filename').innerText = wf.filename;
+            const triggersDiv = document.getElementById('meta-triggers');
+            triggersDiv.innerHTML = '';
+            wf.on.forEach(t => {{
+                const span = document.createElement('span');
+                span.className = 'tag';
+                span.innerText = t;
+                triggersDiv.appendChild(span);
+            }});
 
             currentWfId = id;
             renderGraph(wf.elements);
@@ -358,7 +429,7 @@ class HTMLGenerator:
                             'border-color': '#01579b',
                             'shape': 'rectangle',
                             'text-valign': 'top',
-                            'padding': '20px'
+                            'padding': '40px'
                         }}
                     }},
                     {{
@@ -369,7 +440,7 @@ class HTMLGenerator:
                             'border-color': '#2e7d32',
                             'shape': 'round-rectangle',
                             'text-valign': 'top',
-                            'padding': '10px'
+                            'padding': '20px'
                         }}
                     }},
                     {{
@@ -386,10 +457,25 @@ class HTMLGenerator:
                         selector: 'edge',
                         style: {{
                             'width': 2,
-                            'line-color': '#a1a8b0',
-                            'target-arrow-color': '#a1a8b0',
                             'target-arrow-shape': 'triangle',
                             'curve-style': 'bezier'
+                        }}
+                    }},
+                    {{
+                        selector: 'edge[type="dependency"]',
+                        style: {{
+                            'line-color': '#a1a8b0',
+                            'target-arrow-color': '#a1a8b0',
+                            'width': 3
+                        }}
+                    }},
+                    {{
+                        selector: 'edge[type="chronology"]',
+                        style: {{
+                            'line-color': '#ddd',
+                            'target-arrow-color': '#ddd',
+                            'width': 1.5,
+                            'line-style': 'solid'
                         }}
                     }},
                     {{
@@ -402,9 +488,10 @@ class HTMLGenerator:
                 ],
                 layout: {{
                     name: 'dagre',
-                    nodeSep: 50,
-                    edgeSep: 10,
-                    rankSep: 100
+                    nodeSep: 100,
+                    edgeSep: 50,
+                    rankSep: 150,
+                    rankDir: 'TB'
                 }}
             }});
         }}

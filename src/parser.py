@@ -19,10 +19,19 @@ class WorkflowParser:
                     with open(file_path, 'r') as raw_f:
                         raw_content = raw_f.read()
 
+                    on_data = data.get('on', {})
+                    if isinstance(on_data, str):
+                        on_list = [on_data]
+                    elif isinstance(on_data, list):
+                        on_list = on_data
+                    else:
+                        on_list = list(on_data.keys())
+
                     workflow_info = {
                         'filename': os.path.basename(file_path),
                         'name': data.get('name', os.path.basename(file_path)),
-                        'on': data.get('on', {}),
+                        'on': on_list,
+                        'on_full': on_data,
                         'raw_content': raw_content,
                         'jobs': []
                     }
