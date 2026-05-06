@@ -27,7 +27,7 @@ class HTMLGenerator:
                 if job.get('uses'):
                     label += f"\nuses: {job['uses']}"
                 if job.get('if'):
-                    label += f"\n[if: {job['if']}]"
+                    label += f"\nif: {job['if']}"
                 
                 elements.append({
                     'data': {
@@ -45,7 +45,7 @@ class HTMLGenerator:
                     if step.get('uses'):
                         step_label += f"\nuses: {step['uses']}"
                     if step.get('if'):
-                        step_label += f"\n[if: {step['if']}]"
+                        step_label += f"\nif: {step['if']}"
                     
                     elements.append({
                         'data': {
@@ -253,7 +253,7 @@ class HTMLGenerator:
                     <div class="legend-item"><div class="legend-color" style="background: #e1f5fe; border: 1px solid #01579b;"></div> Workflow</div>
                     <div class="legend-item"><div class="legend-color" style="background: #e8f5e9; border: 1px solid #2e7d32;"></div> Job</div>
                     <div class="legend-item"><div class="legend-color" style="background: #f5f5f5; border: 1px solid #9e9e9e;"></div> Step</div>
-                    <div class="legend-item"><div style="width: 12px; height: 0; border-top: 2px dashed #666; margin-right: 8px;"></div> Conditional (if)</div>
+                    X ➔ Y : Y needs X</div>
                 </div>
             </div>
             <div id="code-view" class="view">
