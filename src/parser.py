@@ -16,10 +16,14 @@ class WorkflowParser:
                     if not data or 'jobs' not in data:
                         continue
                     
+                    with open(file_path, 'r') as raw_f:
+                        raw_content = raw_f.read()
+
                     workflow_info = {
                         'filename': os.path.basename(file_path),
                         'name': data.get('name', os.path.basename(file_path)),
                         'on': data.get('on', {}),
+                        'raw_content': raw_content,
                         'jobs': []
                     }
 
