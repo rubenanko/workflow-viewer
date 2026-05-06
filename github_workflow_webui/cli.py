@@ -1,8 +1,8 @@
 import argparse
 import sys
 import os
-from parser import WorkflowParser
-from generator import HTMLGenerator
+from github_workflow_webui.parser import WorkflowParser
+from github_workflow_webui.generator import HTMLGenerator
 
 def main():
     parser = argparse.ArgumentParser(description="GitHub Actions Workflow Visualizer CLI")

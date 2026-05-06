@@ -1,6 +1,7 @@
 import yaml
 import os
 import glob
+from tqdm import tqdm
 
 class WorkflowParser:
     def __init__(self, directory):
@@ -9,7 +10,7 @@ class WorkflowParser:
 
     def parse(self):
         files = glob.glob(os.path.join(self.directory, "*.yml")) + glob.glob(os.path.join(self.directory, "*.yaml"))
-        for file_path in files:
+        for file_path in tqdm(files):
             with open(file_path, 'r') as f:
                 try:
                     try:
