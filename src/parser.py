@@ -12,7 +12,10 @@ class WorkflowParser:
         for file_path in files:
             with open(file_path, 'r') as f:
                 try:
-                    data = yaml.safe_load(f)
+                    try:
+                        data = yaml.load(f,Loader=yaml.BaseLoader)
+                    except:
+                        data = None
                     if not data or 'jobs' not in data:
                         continue
                     
