@@ -2,3 +2,5 @@
 venv
 .venv
 final_graph.html
+github_workflow_webui.egg-info
+build

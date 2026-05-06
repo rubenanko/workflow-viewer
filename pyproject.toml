@@ -1,0 +1,12 @@
+[project]
+name = "github_workflow_webui"
+version = "0.1.0"
+dependencies = [
+                "argparse",
+                "pyjson",
+                "pyyaml",
+                "tqdm"
+                ]
+
+[project.scripts]
+ghwui = "github_workflow_webui.cli:main"
